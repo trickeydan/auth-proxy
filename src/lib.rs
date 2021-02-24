@@ -44,7 +44,7 @@ async fn rev_proxy(
 
             match client.request(req).await {
                 Ok(r) => r,
-                Err(_) => error_response(StatusCode::BAD_GATEWAY),
+                Err(_) => error_response(StatusCode::GATEWAY_TIMEOUT),
             }
         }
         Err(ar) => match ar {
@@ -65,8 +65,23 @@ async fn rev_proxy(
             }
         },
     };
+    let response = process_location_header(response);
     let response = create_proxied_response(response);
     Ok(response)
+}
+
+fn process_location_header(response: Response<Body>) -> Response<Body> {
+    match response.status() {
+        StatusCode::MOVED_PERMANENTLY
+        | StatusCode::FOUND
+        | StatusCode::SEE_OTHER
+        | StatusCode::TEMPORARY_REDIRECT
+        | StatusCode::PERMANENT_REDIRECT => {
+            log::warn!("Received a redirect response from backend. Blocking.");
+            error_response(StatusCode::BAD_GATEWAY)
+        }
+        _ => response,
+    }
 }
 
 fn error_response(status: StatusCode) -> Response<Body> {
