@@ -1,0 +1,92 @@
+# This file is a derivative work of Jake Howard, originally under BSD 3-Clause
+# Retrieved on 2021-02-24 from https://github.com/RealOrangeOne/traefik-pages/commit/b22d2d17d4dfa77a6b3830bf94df16120f4c721a
+
+name: CI
+
+on:
+  push:
+    branches:
+      - "*"
+  pull_request:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - uses: actions/cache@v1
+        with:
+          path: $HOME/.cargo
+          key: cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+
+      - name: Build
+        uses: actions-rs/cargo@v1
+        with:
+          command: build
+          args: --release
+
+  test:
+    runs-on: ubuntu-latest
+    needs: lint
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - uses: actions/cache@v1
+        with:
+          path: $HOME/.cargo
+          key: cargo-${{ hashFiles('Cargo.lock') }}
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: clippy
+
+      - name: Check
+        uses: actions-rs/cargo@v1
+        with:
+          command: check
+
+      - name: Test
+        uses: actions-rs/cargo@v1
+        with:
+          command: test
+
+      - name: Run cargo clippy
+        uses: actions-rs/cargo@v1
+        with:
+          command: clippy
+          args: -- -D warnings
+
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v2
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          profile: minimal
+          toolchain: stable
+          override: true
+          components: rustfmt
+
+      - name: Run cargo fmt
+        uses: actions-rs/cargo@v1
+        with:
+          command: fmt
+          args: --all -- --check
