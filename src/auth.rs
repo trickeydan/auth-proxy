@@ -76,8 +76,13 @@ fn check_token_is_valid(token: &str, config: &Config, backend: &Backend) -> Resu
         Err(err) => return Err(AuthReason::InvalidToken(err)),
     };
 
-    println!("{:?}", backend.scope);
-    println!("{:?}", token_data.claims.scopes);
+    let allowed = token_data.claims.scopes.iter().any(|x| x > &backend.scope);
 
-    Ok(())
+    match allowed {
+        true => Ok(()),
+        false => Err(AuthReason::InsufficientScope(format!(
+            "{:?} is insufficient scope to reach {}",
+            token_data.claims.scopes, backend.scope
+        ))),
+    }
 }
