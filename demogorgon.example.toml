@@ -6,11 +6,11 @@ keyfile = "public_key.pem"
 issuer = "demogorgon"
 
 [backends.cats]
-url = "http.cat"
+url = "https://http.cat"
 scope = "cats:cat"
 
 [backends.hass]
-url = "homeassistant.example.com"
+url = "https://homeassistant.example.com/api"
 cert_auth = { PEMFile = "clientcert.pem" }
 headers = {"authorization" = "Bearer foobar"}
 scope = "hass:*"

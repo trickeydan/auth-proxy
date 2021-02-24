@@ -1,7 +1,7 @@
 use hyper::header::{HeaderMap, HeaderName, HeaderValue, HOST, VIA};
 use lazy_static::lazy_static;
 
-use hyper::{Request, Response};
+use hyper::{Request, Response, Uri};
 use std::net::IpAddr;
 
 use super::config;
@@ -56,11 +56,14 @@ pub fn create_proxied_request<B>(
         .skip(2)
         .fold(String::new(), |a, b| a + "/" + b);
 
-    let uri_string = format!("https://{}{}", backend.url, path_and_query);
-    *request.uri_mut() = uri_string.parse().unwrap();
+    let uri = format!("{}{}", backend.url, path_and_query);
+    let uri: Uri = uri.parse().unwrap();
+    let host = get_host_from_uri(&uri);
+    *request.uri_mut() = uri;
+
     request
         .headers_mut()
-        .insert(HOST, HeaderValue::from_str(&backend.url).unwrap());
+        .insert(HOST, HeaderValue::from_str(&host).unwrap());
 
     *request.headers_mut() = remove_hop_headers(request.headers());
 
@@ -105,4 +108,59 @@ pub fn create_proxied_response<B>(mut response: Response<B>) -> Response<B> {
         .headers_mut()
         .insert(VIA, HeaderValue::from_static(SERVER_VIA));
     response
+}
+
+pub fn get_host_from_uri(uri: &Uri) -> String {
+    uri.authority().unwrap().host().to_string()
+}
+
+#[cfg(test)]
+mod tests {
+
+    use super::get_host_from_uri;
+    use hyper::Uri;
+    use std::str::FromStr;
+
+    fn test_uri_host(uri: &str, host: &str) {
+        let uri = Uri::from_str(uri).unwrap();
+        assert_eq!(get_host_from_uri(&uri), host);
+    }
+
+    #[test]
+    fn host_from_uri() {
+        test_uri_host("http://example.com", "example.com");
+        test_uri_host("https://example.com", "example.com");
+    }
+
+    #[test]
+    fn host_from_uri_with_path() {
+        test_uri_host("http://example.com/", "example.com");
+        test_uri_host("http://example.com/path", "example.com");
+        test_uri_host("http://example.com/path/to/foo", "example.com");
+        test_uri_host("http://example.com/path/to/foo/", "example.com");
+        test_uri_host("https://example.com/", "example.com");
+        test_uri_host("https://example.com/path", "example.com");
+        test_uri_host("https://example.com/path/to/foo", "example.com");
+        test_uri_host("https://example.com/path/to/foo/", "example.com");
+    }
+
+    #[test]
+    fn host_from_uri_with_query() {
+        test_uri_host("http://example.com?bees=true", "example.com");
+        test_uri_host("http://example.com/?bees=true", "example.com");
+        test_uri_host("https://example.com?bees=true", "example.com");
+        test_uri_host("https://example.com/?bees=true", "example.com");
+    }
+
+    #[test]
+    fn host_from_uri_with_path_and_query() {
+        test_uri_host("http://example.com/foo/?bees=true", "example.com");
+        test_uri_host("http://example.com/foo/bar/?bees=true", "example.com");
+        test_uri_host("https://example.com/foo/?bees=true", "example.com");
+        test_uri_host("https://example.com/foo/bar/?bees=true", "example.com");
+        test_uri_host("http://example.com/foo?bees=true", "example.com");
+        test_uri_host("http://example.com/foo/bar?bees=true", "example.com");
+        test_uri_host("https://example.com/foo?bees=true", "example.com");
+        test_uri_host("https://example.com/foo/bar?bees=true", "example.com");
+    }
 }
