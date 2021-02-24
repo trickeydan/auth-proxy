@@ -1,0 +1,21 @@
+[package]
+name = "demogorgon"
+version = "0.1.0"
+authors = ["Dan Trickey <dan@trickey.io>"]
+edition = "2018"
+
+[dependencies]
+hyper = { version = "0.14", features = ["http1", "client", "server"]}
+hyper-rustls = "0.22"
+jsonwebtoken = "7.2"
+lazy_static = "1.4"
+log = "0.4"
+rustls = "0.19"
+rustls-native-certs = "0.5"
+rustls-pemfile = "0.2.0"  # PEM parsing is due to be removed from rustls
+pretty_env_logger = "0.4.0"
+serde = { version = "1.0", features = ["derive"] }
+tokio = { version = "1.2", features = ["full"]}
+toml = "0.5"
+unicase = "2.6"
+uuid = { version = "0.8", features = ["serde"] }

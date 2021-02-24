@@ -1,0 +1,16 @@
+address = "[::]:8000"
+
+[auth]
+algorithm = "ES256"
+keyfile = "public_key.pem"
+issuer = "authproxy"
+
+[backends.cats]
+url = "http.cat"
+scope = "cats:cat"
+
+[backends.hass]
+url = "homeassistant.example.com"
+cert_auth = { PEMFile = "clientcert.pem" }
+headers = {"authorization" = "Bearer foobar"}
+scope = "hass:*"
