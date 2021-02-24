@@ -71,7 +71,7 @@ impl<'de> Visitor<'de> for ScopeEntryVisitor {
     where
         E: de::Error,
     {
-        let parts: Vec<&str> = value.split(":").collect();
+        let parts: Vec<&str> = value.split(':').collect();
 
         match parts.len() {
             2 => {

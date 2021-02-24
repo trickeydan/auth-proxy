@@ -52,7 +52,7 @@ pub fn create_proxied_request<B>(
         .path_and_query()
         .map(|x| x.as_str())
         .unwrap_or("/")
-        .split("/")
+        .split('/')
         .skip(2)
         .fold(String::new(), |a, b| a + "/" + b);
 

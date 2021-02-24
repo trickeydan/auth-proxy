@@ -10,7 +10,7 @@ use std::net::IpAddr;
 use crate::auth::{request_is_authorized, AuthReason};
 use crate::proxy::{create_proxied_request, create_proxied_response, request_add_custom_headers};
 
-pub const SERVER_VIA: &'static str = concat!(env!("CARGO_PKG_VERSION"), " Demogorgon");
+pub const SERVER_VIA: &str = concat!(env!("CARGO_PKG_VERSION"), " Demogorgon");
 
 pub async fn service_handler(
     req: Request<Body>,
@@ -19,7 +19,7 @@ pub async fn service_handler(
 ) -> Result<Response<Body>, hyper::Error> {
     log::debug!("Request to {}", req.uri());
 
-    let first = req.uri().path().split("/").nth(1).unwrap();
+    let first = req.uri().path().split('/').nth(1).unwrap();
     log::debug!("Creating HTTPS client with Cert Auth");
 
     match config.backends.get(first) {
@@ -57,7 +57,7 @@ async fn rev_proxy(
                 log::warn!("D {} {} {}", remote_addr, req.method(), req.uri());
                 log::warn!("Invalid token: {}", jwt_error);
                 error_response(StatusCode::UNAUTHORIZED)
-            },
+            }
             AuthReason::InsufficientScope(reason) => {
                 log::warn!("D {} {} {}", remote_addr, req.method(), req.uri());
                 log::warn!("Insufficient scope: {}", reason);

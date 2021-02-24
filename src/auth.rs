@@ -6,7 +6,7 @@ use serde::Deserialize;
 use std::fs;
 use uuid::Uuid;
 
-use crate::config::{Config, Backend};
+use crate::config::{Backend, Config};
 use crate::scope::ScopeEntry;
 
 #[derive(Debug, Deserialize)]
@@ -23,7 +23,11 @@ pub enum AuthReason {
     InsufficientScope(String),
 }
 
-pub fn request_is_authorized<B>(req: &Request<B>, backend: &Backend, config: &Config) -> Result<(), AuthReason> {
+pub fn request_is_authorized<B>(
+    req: &Request<B>,
+    backend: &Backend,
+    config: &Config,
+) -> Result<(), AuthReason> {
     match req.headers().get(AUTHORIZATION) {
         Some(header) => {
             let token = extract_token_from_header(&header)?;
