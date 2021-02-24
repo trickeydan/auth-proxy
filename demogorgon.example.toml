@@ -3,7 +3,7 @@ address = "[::]:8000"
 [auth]
 algorithm = "ES256"
 keyfile = "public_key.pem"
-issuer = "authproxy"
+issuer = "demogorgon"
 
 [backends.cats]
 url = "http.cat"
