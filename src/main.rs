@@ -18,6 +18,8 @@ use demogorgon::service_handler;
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     pretty_env_logger::init();
 
+    info!("🔦🚲 Demogorgon {} 🔦🚲", env!("CARGO_PKG_VERSION"));
+
     let yaml = load_yaml!("cli.yml");
     let matches = App::from_yaml(yaml).version(crate_version!()).get_matches();
 
@@ -28,7 +30,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
         process::exit(1);
     });
 
-    // TODO: Print config in safe manner
+    log::info!("Loaded {} backends", config.backends.len());
+    for (name, backend) in &config.backends {
+        log::info!("\t {} -> {}", name, backend.url);
+        log::info!("\t\tScope: {}", backend.scope);
+    }
 
     let service = make_service_fn(move |conn: &AddrStream| {
         // first move it into the closure
@@ -48,11 +54,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     });
 
     let config = Config::load("demogorgon.toml").unwrap_or_else(|err| {
+        error!("I'm sorry. You ate my cat.");
         error!("Config Error: {}", err);
         process::exit(1);
     });
 
-    info!("Starting Demogorgon {}", env!("CARGO_PKG_VERSION"));
     info!("Listening on http://{}", config.address);
 
     let server = Server::bind(&config.address).serve(service);
