@@ -1,0 +1,10 @@
+name: demogorgon
+author: Dan Trickey <dan@trickey.io>
+about: It's a proxy and it will eat you
+args:
+    - config:
+        short: c
+        long: config
+        value_name: FILE
+        help: Sets a custom config file
+        takes_value: true

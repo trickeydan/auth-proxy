@@ -2,6 +2,10 @@
 #[macro_use]
 extern crate log;
 
+#[macro_use]
+extern crate clap;
+
+use clap::{crate_version, App};
 use hyper::server::conn::AddrStream;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::Server;
@@ -14,7 +18,12 @@ use demogorgon::service_handler;
 async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     pretty_env_logger::init();
 
-    let config = Config::load("demogorgon.toml").unwrap_or_else(|err| {
+    let yaml = load_yaml!("cli.yml");
+    let matches = App::from_yaml(yaml).version(crate_version!()).get_matches();
+
+    let config = matches.value_of("config").unwrap_or("demogorgon.toml");
+
+    let config = Config::load(config).unwrap_or_else(|err| {
         error!("Config Error: {}", err);
         process::exit(1);
     });

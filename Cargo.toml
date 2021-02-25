@@ -5,6 +5,7 @@ authors = ["Dan Trickey <dan@trickey.io>"]
 edition = "2018"
 
 [dependencies]
+clap = {version = "2.33", features = ["yaml"]}
 hyper = { version = "0.14", features = ["http1", "client", "server"]}
 hyper-rustls = "0.22"
 jsonwebtoken = "7.2"
