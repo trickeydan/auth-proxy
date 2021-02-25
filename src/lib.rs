@@ -34,13 +34,15 @@ async fn rev_proxy(
     backend: &config::Backend,
     config: &config::Config,
 ) -> Result<Response<Body>, hyper::Error> {
+    let path = req.uri().path().to_string();
+
     let response = match request_is_authorized(&req, &backend, &config) {
         Ok(_) => {
             let client = backend.get_client();
             let req = create_proxied_request(remote_addr, &backend, req)?;
             let req = request_add_custom_headers(&backend, req);
 
-            log::info!("A {} {} {}", remote_addr, req.method(), req.uri());
+            log::info!("A {} {} {}", remote_addr, req.method(), path);
 
             match client.request(req).await {
                 Ok(r) => r,
@@ -49,17 +51,17 @@ async fn rev_proxy(
         }
         Err(ar) => match ar {
             AuthReason::BadRequest(reason) | AuthReason::NotImplemented(reason) => {
-                log::warn!("D {} {} {}", remote_addr, req.method(), req.uri());
+                log::warn!("D {} {} {}", remote_addr, req.method(), path);
                 log::warn!("Bad Request: {}", reason);
                 error_response(StatusCode::BAD_REQUEST)
             }
             AuthReason::InvalidToken(jwt_error) => {
-                log::warn!("D {} {} {}", remote_addr, req.method(), req.uri());
+                log::warn!("D {} {} {}", remote_addr, req.method(), path);
                 log::warn!("Invalid token: {}", jwt_error);
                 error_response(StatusCode::UNAUTHORIZED)
             }
             AuthReason::InsufficientScope(reason) => {
-                log::warn!("D {} {} {}", remote_addr, req.method(), req.uri());
+                log::warn!("D {} {} {}", remote_addr, req.method(), path);
                 log::warn!("Insufficient scope: {}", reason);
                 error_response(StatusCode::FORBIDDEN)
             }
