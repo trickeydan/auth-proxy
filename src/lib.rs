@@ -39,7 +39,7 @@ async fn rev_proxy(
     let response = match request_is_authorized(&req, &backend, &config) {
         Ok(scope) => {
             let client = backend.get_client();
-            let req = create_proxied_request(remote_addr, &backend, req)?;
+            let req = create_proxied_request(remote_addr, &backend, req, &scope)?;
             let req = request_add_custom_headers(&backend, req);
 
             log::info!("A {} {{{}}} {} {}", remote_addr, scope, req.method(), path);

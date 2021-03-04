@@ -5,6 +5,7 @@ use hyper::{Request, Response, Uri};
 use std::net::IpAddr;
 
 use super::config;
+use super::scope;
 use super::SERVER_VIA;
 
 fn is_hop_header(name: &str) -> bool {
@@ -46,6 +47,7 @@ pub fn create_proxied_request<B>(
     client_ip: IpAddr,
     backend: &config::Backend,
     mut request: Request<B>,
+    scope: &scope::ScopeEntry,
 ) -> Result<Request<B>, hyper::Error> {
     let path_and_query = request
         .uri()
@@ -64,6 +66,9 @@ pub fn create_proxied_request<B>(
     request
         .headers_mut()
         .insert(HOST, HeaderValue::from_str(&host).unwrap());
+    request
+        .headers_mut()
+        .insert("X-Demogorgon-AScope", HeaderValue::from_str(&scope.to_string()).unwrap());
 
     *request.headers_mut() = remove_hop_headers(request.headers());
 
