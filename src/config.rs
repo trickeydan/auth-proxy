@@ -21,6 +21,9 @@ pub struct Backend {
 
     #[serde(default = "default_scope_header")]
     pub scope_header: String,
+
+    #[serde(default)]
+    pub scope_header_pass_full: bool,
 }
 
 fn default_scope_header() -> String {

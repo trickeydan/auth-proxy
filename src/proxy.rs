@@ -92,9 +92,13 @@ pub fn create_proxied_request<B>(
         .insert(VIA, HeaderValue::from_static(SERVER_VIA));
 
     // Add Scope Header
+    let scope_to_pass = match backend.scope_header_pass_full {
+        true => scope.to_string(),
+        false => scope.child.to_string(),
+    };
     request.headers_mut().insert(
         HeaderName::from_bytes(backend.scope_header.as_bytes()).unwrap(),
-        HeaderValue::from_str(&scope.to_string()).unwrap(),
+        HeaderValue::from_str(&scope_to_pass).unwrap(),
     );
 
     Ok(request)

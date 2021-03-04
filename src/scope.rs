@@ -57,8 +57,8 @@ impl<'de> Visitor<'de> for ScopeValueVisitor {
 
 #[derive(PartialEq, Clone, Debug)]
 pub struct ScopeEntry {
-    parent: ScopeValue,
-    child: ScopeValue,
+    pub parent: ScopeValue,
+    pub child: ScopeValue,
 }
 
 impl PartialOrd for ScopeEntry {
