@@ -12,6 +12,7 @@ use crate::tls::ClientCertAuth;
 use crate::scope::ScopeEntry;
 
 #[derive(Clone, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Backend {
     cert_auth: Option<ClientCertAuth>,
     pub headers: Option<HashMap<String, String>>,
@@ -60,6 +61,7 @@ impl Backend {
 }
 
 #[derive(Clone, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Auth {
     pub algorithm: Algorithm,
     pub keyfile: String,
@@ -67,6 +69,7 @@ pub struct Auth {
 }
 
 #[derive(Clone, Deserialize, Debug)]
+#[serde(deny_unknown_fields)]
 pub struct Config {
     pub address: SocketAddr,
     pub auth: Auth,
