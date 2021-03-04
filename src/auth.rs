@@ -27,7 +27,7 @@ pub fn request_is_authorized<B>(
     req: &Request<B>,
     backend: &Backend,
     config: &Config,
-) -> Result<(), AuthReason> {
+) -> Result<ScopeEntry, AuthReason> {
     match req.headers().get(AUTHORIZATION) {
         Some(header) => {
             let token = extract_token_from_header(&header)?;
@@ -59,7 +59,7 @@ fn load_ec_decoding_key() -> DecodingKey<'static> {
         .unwrap()
 }
 
-fn check_token_is_valid(token: &str, config: &Config, backend: &Backend) -> Result<(), AuthReason> {
+fn check_token_is_valid(token: &str, config: &Config, backend: &Backend) -> Result<ScopeEntry, AuthReason> {
     let (validation, key) = match config.auth.algorithm {
         Algorithm::ES256 | Algorithm::ES384 => {
             (get_jwt_validation(&config), load_ec_decoding_key())
@@ -76,13 +76,14 @@ fn check_token_is_valid(token: &str, config: &Config, backend: &Backend) -> Resu
         Err(err) => return Err(AuthReason::InvalidToken(err)),
     };
 
-    let allowed = token_data.claims.scopes.iter().any(|x| x > &backend.scope);
-
-    match allowed {
-        true => Ok(()),
-        false => Err(AuthReason::InsufficientScope(format!(
-            "{:?} is insufficient scope to reach {}",
-            token_data.claims.scopes, backend.scope
-        ))),
+    for token_scope in &token_data.claims.scopes {
+        if token_scope > &backend.scope {
+            return Ok(token_scope.clone());
+        }
     }
+
+    Err(AuthReason::InsufficientScope(format!(
+        "{:?} is insufficient scope to reach {}",
+        token_data.claims.scopes, backend.scope
+    )))
 }
