@@ -63,13 +63,15 @@ pub fn create_proxied_request<B>(
     let host = get_host_from_uri(&uri);
     *request.uri_mut() = uri;
 
+    //Remove sensitive authorisation header
+    request.headers_mut().remove("authorization");
+
+    //Add Host Header
     request
         .headers_mut()
         .insert(HOST, HeaderValue::from_str(&host).unwrap());
-    request
-        .headers_mut()
-        .insert("X-Demogorgon-AScope", HeaderValue::from_str(&scope.to_string()).unwrap());
 
+    // Remove hop header
     *request.headers_mut() = remove_hop_headers(request.headers());
 
     // Add forwarding information in the headers
@@ -88,6 +90,12 @@ pub fn create_proxied_request<B>(
     request
         .headers_mut()
         .insert(VIA, HeaderValue::from_static(SERVER_VIA));
+
+    // Add Scope Header
+    request.headers_mut().insert(
+        "X-Demogorgon-AScope",
+        HeaderValue::from_str(&scope.to_string()).unwrap(),
+    );
 
     Ok(request)
 }

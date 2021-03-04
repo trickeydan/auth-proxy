@@ -59,7 +59,11 @@ fn load_ec_decoding_key() -> DecodingKey<'static> {
         .unwrap()
 }
 
-fn check_token_is_valid(token: &str, config: &Config, backend: &Backend) -> Result<ScopeEntry, AuthReason> {
+fn check_token_is_valid(
+    token: &str,
+    config: &Config,
+    backend: &Backend,
+) -> Result<ScopeEntry, AuthReason> {
     let (validation, key) = match config.auth.algorithm {
         Algorithm::ES256 | Algorithm::ES384 => {
             (get_jwt_validation(&config), load_ec_decoding_key())
