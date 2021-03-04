@@ -18,6 +18,13 @@ pub struct Backend {
     pub headers: Option<HashMap<String, String>>,
     pub url: String,
     pub scope: ScopeEntry,
+
+    #[serde(default = "default_scope_header")]
+    pub scope_header: String,
+}
+
+fn default_scope_header() -> String {
+    "X-Demogorgon-Scope".to_string()
 }
 
 impl Backend {

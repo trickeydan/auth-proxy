@@ -93,7 +93,7 @@ pub fn create_proxied_request<B>(
 
     // Add Scope Header
     request.headers_mut().insert(
-        "X-Demogorgon-AScope",
+        HeaderName::from_bytes(backend.scope_header.as_bytes()).unwrap(),
         HeaderValue::from_str(&scope.to_string()).unwrap(),
     );
 
