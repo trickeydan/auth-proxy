@@ -32,15 +32,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
 
     log::info!("Loaded {} backends", config.backends.len());
     for (name, backend) in &config.backends {
-        log::info!("\t {} -> {}", name, backend.url);
+        log::info!("\t /{} -> {}", name, backend.url);
         log::info!("\t\tScope: {}", backend.scope);
     }
 
+    let config2 = config.clone();
     let service = make_service_fn(move |conn: &AddrStream| {
         // first move it into the closure
         // closure can be called multiple times, so for each call, we must
         // clone it and move that clone into the async block
-        let config = config.clone();
+        let config = config2.clone();
         let remote_addr = conn.remote_addr().ip();
         async move {
             // async block is only executed once, so just pass it on to the closure
@@ -51,12 +52,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 async move { service_handler(_req, remote_addr, config).await }
             }))
         }
-    });
-
-    let config = Config::load("demogorgon.toml").unwrap_or_else(|err| {
-        error!("I'm sorry. You ate my cat.");
-        error!("Config Error: {}", err);
-        process::exit(1);
     });
 
     info!("Listening on http://{}", config.address);
