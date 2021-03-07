@@ -5,9 +5,9 @@ extern crate log;
 #[macro_use]
 extern crate clap;
 
-use crate::config::Config;
-use crate::service_handler;
 use clap::{crate_version, App};
+use demogorgon::config::Config;
+use demogorgon::service_handler;
 use hyper::server::conn::AddrStream;
 use hyper::service::{make_service_fn, service_fn};
 use hyper::Server;
