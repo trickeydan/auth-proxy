@@ -1,5 +1,6 @@
-use crate::auth::AuthReason;
-use crate::config::{Backend, Config};
+use super::AuthReason;
+use super::{Authentication, Authenticator, FrontendAuthType};
+use crate::config::TokenAuthConfig;
 use crate::scope::ScopeEntry;
 use hyper::header::{HeaderValue, AUTHORIZATION};
 use hyper::Request;
@@ -15,71 +16,72 @@ struct Claims {
     scopes: Vec<ScopeEntry>,
 }
 
-pub fn check_token_auth<B>(
-    req: &Request<B>,
-    backend: &Backend,
-    config: &Config,
-) -> Result<ScopeEntry, AuthReason> {
-    match req.headers().get(AUTHORIZATION) {
-        Some(header) => {
-            let token = extract_token_from_header(&header)?;
-            check_token_is_valid(token, &config, &backend)
+pub struct TokenAuthenticator {
+    config: TokenAuthConfig,
+}
+
+impl TokenAuthenticator {
+    pub fn new(config: &TokenAuthConfig) -> Self {
+        Self {
+            config: config.clone(),
         }
-        None => Err(AuthReason::BadRequest("Missing authorization header")),
+    }
+
+    fn get_authorization_header<B>(req: &Request<B>) -> Result<&HeaderValue, AuthReason> {
+        match req.headers().get(AUTHORIZATION) {
+            Some(header) => Ok(header),
+            None => Err(AuthReason::BadRequest("Missing authorization header")),
+        }
+    }
+
+    fn extract_token_from_header(header: &HeaderValue) -> Result<&str, AuthReason> {
+        let header = header.to_str().expect("Unable to parse header as str");
+        if !header.starts_with("Bearer ") {
+            return Err(AuthReason::BadRequest("Authorization must be Bearer"));
+        }
+        Ok(header.trim_start_matches("Bearer "))
+    }
+
+    fn get_jwt_validation(&self) -> Validation {
+        let mut validation = Validation::new(self.config.algorithm);
+        validation.iss = Some(String::from(&self.config.issuer));
+        validation
     }
 }
 
-fn extract_token_from_header(header: &HeaderValue) -> Result<&str, AuthReason> {
-    let header = header.to_str().expect("Unable to parse header as str");
-    if !header.starts_with("Bearer ") {
-        return Err(AuthReason::BadRequest("Authorization must be Bearer"));
+impl Authenticator for TokenAuthenticator {
+    fn authenticate<B>(&self, req: &Request<B>) -> Result<Authentication, AuthReason> {
+        let header = TokenAuthenticator::get_authorization_header(req)?;
+        let token = TokenAuthenticator::extract_token_from_header(header)?;
+
+        let (validation, key) = match self.config.algorithm {
+            Algorithm::ES256 | Algorithm::ES384 => {
+                (self.get_jwt_validation(), load_ec_decoding_key(&self.config.keyfile))
+            }
+            _ => {
+                return Err(AuthReason::NotImplemented(
+                    "Unable to use non ES key, not implemented",
+                ))
+            }
+        };
+
+        let token_data = match decode::<Claims>(&token, &key, &validation) {
+            Ok(c) => c,
+            Err(err) => return Err(AuthReason::InvalidCredentials(err)),
+        };
+
+        Ok(Authentication {
+            id: Some(token_data.claims.sub),
+            auth_type: FrontendAuthType::Token,
+            scopes: token_data.claims.scopes,
+        })
     }
-    Ok(header.trim_start_matches("Bearer "))
 }
 
-fn get_jwt_validation(config: &Config) -> Validation {
-    let mut validation = Validation::new(config.auth.algorithm);
-    validation.iss = Some(String::from(&config.auth.issuer));
-    validation
-}
-
-fn load_ec_decoding_key() -> DecodingKey<'static> {
+fn load_ec_decoding_key(filename: &str) -> DecodingKey<'static> {
     let secret =
-        fs::read("public_key.pem").unwrap_or_else(|_| panic!("Unable to read file public key"));
+        fs::read(filename).unwrap_or_else(|_| panic!("Unable to read file public key"));
     DecodingKey::from_ec_pem(&secret)
         .map(DecodingKey::into_static)
         .unwrap()
-}
-
-fn check_token_is_valid(
-    token: &str,
-    config: &Config,
-    backend: &Backend,
-) -> Result<ScopeEntry, AuthReason> {
-    let (validation, key) = match config.auth.algorithm {
-        Algorithm::ES256 | Algorithm::ES384 => {
-            (get_jwt_validation(&config), load_ec_decoding_key())
-        }
-        _ => {
-            return Err(AuthReason::NotImplemented(
-                "Unable to use non ES key, not implemented",
-            ))
-        }
-    };
-
-    let token_data = match decode::<Claims>(&token, &key, &validation) {
-        Ok(c) => c,
-        Err(err) => return Err(AuthReason::InvalidCredentials(err)),
-    };
-
-    for token_scope in &token_data.claims.scopes {
-        if token_scope > &backend.scope {
-            return Ok(token_scope.clone());
-        }
-    }
-
-    Err(AuthReason::InsufficientScope(format!(
-        "{:?} is insufficient scope to reach {}",
-        token_data.claims.scopes, backend.scope
-    )))
 }

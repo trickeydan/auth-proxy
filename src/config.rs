@@ -1,3 +1,6 @@
+use crate::auth::FrontendAuthType;
+use crate::scope::ScopeEntry;
+use crate::tls::ClientCertAuth;
 use hyper::client::connect::HttpConnector;
 use hyper::Client;
 use jsonwebtoken::Algorithm;
@@ -6,22 +9,6 @@ use std::collections::HashMap;
 use std::error::Error;
 use std::fs;
 use std::net::SocketAddr;
-
-use crate::tls::ClientCertAuth;
-
-use crate::scope::ScopeEntry;
-
-#[derive(Clone, Deserialize, Debug)]
-pub enum FrontendAuthType {
-    NoAuth,
-    Token,
-}
-
-impl FrontendAuthType {
-    pub fn default() -> Self {
-        FrontendAuthType::Token
-    }
-}
 
 #[derive(Clone, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
@@ -87,7 +74,7 @@ impl Backend {
 
 #[derive(Clone, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
-pub struct Auth {
+pub struct TokenAuthConfig {
     pub algorithm: Algorithm,
     pub keyfile: String,
     pub issuer: String,
@@ -97,7 +84,7 @@ pub struct Auth {
 #[serde(deny_unknown_fields)]
 pub struct Config {
     pub address: SocketAddr,
-    pub auth: Auth,
+    pub auth: TokenAuthConfig,
     pub backends: HashMap<String, Backend>,
 }
 
