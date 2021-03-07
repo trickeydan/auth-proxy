@@ -55,7 +55,7 @@ async fn rev_proxy(
                 log::warn!("Bad Request: {}", reason);
                 error_response(StatusCode::BAD_REQUEST)
             }
-            AuthReason::InvalidToken(jwt_error) => {
+            AuthReason::InvalidCredentials(jwt_error) => {
                 log::warn!("D {} {} {}", remote_addr, req.method(), path);
                 log::warn!("Invalid token: {}", jwt_error);
                 error_response(StatusCode::UNAUTHORIZED)

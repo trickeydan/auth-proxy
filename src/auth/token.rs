@@ -1,38 +1,18 @@
+use crate::auth::AuthReason;
+use crate::config::{Backend, Config};
+use crate::scope::ScopeEntry;
 use hyper::header::{HeaderValue, AUTHORIZATION};
 use hyper::Request;
-use jsonwebtoken::errors::Error as JWTError;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};
 use serde::Deserialize;
-use std::convert::TryFrom;
 use std::fs;
 use uuid::Uuid;
-
-use crate::config::{Backend, Config, FrontendAuthType};
-use crate::scope::ScopeEntry;
 
 #[derive(Debug, Deserialize)]
 struct Claims {
     sub: Uuid,
     exp: usize,
     scopes: Vec<ScopeEntry>,
-}
-
-pub enum AuthReason {
-    BadRequest(&'static str),
-    InvalidToken(JWTError),
-    NotImplemented(&'static str),
-    InsufficientScope(String),
-}
-
-pub fn request_is_authorized<B>(
-    req: &Request<B>,
-    backend: &Backend,
-    config: &Config,
-) -> Result<ScopeEntry, AuthReason> {
-    match &backend.frontend_auth {
-        FrontendAuthType::Token => check_token_auth(req, backend, config),
-        FrontendAuthType::NoAuth => Ok(ScopeEntry::try_from("*:*").unwrap()),
-    }
 }
 
 pub fn check_token_auth<B>(
@@ -89,7 +69,7 @@ fn check_token_is_valid(
 
     let token_data = match decode::<Claims>(&token, &key, &validation) {
         Ok(c) => c,
-        Err(err) => return Err(AuthReason::InvalidToken(err)),
+        Err(err) => return Err(AuthReason::InvalidCredentials(err)),
     };
 
     for token_scope in &token_data.claims.scopes {
