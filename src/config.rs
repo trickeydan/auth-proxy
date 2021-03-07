@@ -12,6 +12,18 @@ use crate::tls::ClientCertAuth;
 use crate::scope::ScopeEntry;
 
 #[derive(Clone, Deserialize, Debug)]
+pub enum FrontendAuthType {
+    NoAuth,
+    Token,
+}
+
+impl FrontendAuthType {
+    pub fn default() -> Self {
+        FrontendAuthType::Token
+    }
+}
+
+#[derive(Clone, Deserialize, Debug)]
 #[serde(deny_unknown_fields)]
 pub struct Backend {
     cert_auth: Option<ClientCertAuth>,
@@ -24,6 +36,9 @@ pub struct Backend {
 
     #[serde(default)]
     pub scope_header_pass_full: bool,
+
+    #[serde(default = "FrontendAuthType::default")]
+    pub frontend_auth: FrontendAuthType,
 }
 
 fn default_scope_header() -> String {
