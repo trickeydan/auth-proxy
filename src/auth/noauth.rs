@@ -1,5 +1,5 @@
+use super::scope::ScopeEntry;
 use super::{AuthReason, Authentication, Authenticator, FrontendAuthType};
-use crate::scope::ScopeEntry;
 use hyper::Request;
 use std::convert::TryFrom;
 

@@ -1,7 +1,7 @@
+use super::scope::ScopeEntry;
 use super::AuthReason;
 use super::{Authentication, Authenticator, FrontendAuthType};
 use crate::config::TokenAuthConfig;
-use crate::scope::ScopeEntry;
 use hyper::header::{HeaderValue, AUTHORIZATION};
 use hyper::Request;
 use jsonwebtoken::{decode, Algorithm, DecodingKey, Validation};

@@ -1,9 +1,10 @@
 use crate::config::{Backend, Config};
-use crate::scope::ScopeEntry;
 use hyper::Request;
 use jsonwebtoken::errors::Error as JWTError;
 use serde::Deserialize;
 use uuid::Uuid;
+
+pub mod scope;
 
 mod noauth;
 mod token;
@@ -31,11 +32,11 @@ impl FrontendAuthType {
 pub struct Authentication {
     id: Option<Uuid>,
     auth_type: FrontendAuthType,
-    scopes: Vec<ScopeEntry>,
+    scopes: Vec<scope::ScopeEntry>,
 }
 
 impl Authentication {
-    pub fn authorize(&self, backend: &Backend) -> Result<ScopeEntry, AuthReason> {
+    pub fn authorize(&self, backend: &Backend) -> Result<scope::ScopeEntry, AuthReason> {
         for token_scope in &self.scopes {
             if token_scope > &backend.scope {
                 return Ok(token_scope.clone());
@@ -57,7 +58,7 @@ pub fn request_is_authorized<B>(
     req: &Request<B>,
     backend: &Backend,
     config: &Config,
-) -> Result<ScopeEntry, AuthReason> {
+) -> Result<scope::ScopeEntry, AuthReason> {
     let authentication = match &backend.frontend_auth {
         FrontendAuthType::Token => {
             let authenticator = token::TokenAuthenticator::new(&config.auth);

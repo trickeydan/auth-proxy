@@ -1,14 +1,12 @@
-pub mod auth;
-pub mod config;
-pub mod proxy;
-pub mod scope;
-pub mod tls;
-
+use crate::auth::{request_is_authorized, AuthReason};
+use crate::proxy::{create_proxied_request, create_proxied_response, request_add_custom_headers};
 use hyper::{Body, Request, Response, StatusCode};
 use std::net::IpAddr;
 
-use crate::auth::{request_is_authorized, AuthReason};
-use crate::proxy::{create_proxied_request, create_proxied_response, request_add_custom_headers};
+pub mod auth;
+pub mod config;
+pub mod proxy;
+pub mod tls;
 
 pub const SERVER_VIA: &str = concat!(env!("CARGO_PKG_VERSION"), " Demogorgon");
 

@@ -1,12 +1,10 @@
+use crate::auth::scope;
+use crate::config;
+use crate::SERVER_VIA;
 use hyper::header::{HeaderMap, HeaderName, HeaderValue, HOST, VIA};
-use lazy_static::lazy_static;
-
 use hyper::{Request, Response, Uri};
+use lazy_static::lazy_static;
 use std::net::IpAddr;
-
-use super::config;
-use super::scope;
-use super::SERVER_VIA;
 
 fn is_hop_header(name: &str) -> bool {
     use unicase::Ascii;

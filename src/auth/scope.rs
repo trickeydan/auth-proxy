@@ -1,8 +1,7 @@
+use serde::de::{self, Deserialize, Deserializer, Visitor};
 use std::cmp::Ordering;
 use std::convert::TryFrom;
 use std::fmt;
-
-use serde::de::{self, Deserialize, Deserializer, Visitor};
 
 #[derive(Clone, Debug, PartialEq)]
 pub enum ScopeValue {

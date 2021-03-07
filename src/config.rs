@@ -1,5 +1,4 @@
-use crate::auth::FrontendAuthType;
-use crate::scope::ScopeEntry;
+use crate::auth::{scope::ScopeEntry, FrontendAuthType};
 use crate::tls::ClientCertAuth;
 use hyper::client::connect::HttpConnector;
 use hyper::Client;
