@@ -55,9 +55,10 @@ impl Authenticator for TokenAuthenticator {
         let token = TokenAuthenticator::extract_token_from_header(header)?;
 
         let (validation, key) = match self.config.algorithm {
-            Algorithm::ES256 | Algorithm::ES384 => {
-                (self.get_jwt_validation(), load_ec_decoding_key(&self.config.keyfile))
-            }
+            Algorithm::ES256 | Algorithm::ES384 => (
+                self.get_jwt_validation(),
+                load_ec_decoding_key(&self.config.keyfile),
+            ),
             _ => {
                 return Err(AuthReason::NotImplemented(
                     "Unable to use non ES key, not implemented",
@@ -79,8 +80,7 @@ impl Authenticator for TokenAuthenticator {
 }
 
 fn load_ec_decoding_key(filename: &str) -> DecodingKey<'static> {
-    let secret =
-        fs::read(filename).unwrap_or_else(|_| panic!("Unable to read file public key"));
+    let secret = fs::read(filename).unwrap_or_else(|_| panic!("Unable to read file public key"));
     DecodingKey::from_ec_pem(&secret)
         .map(DecodingKey::into_static)
         .unwrap()

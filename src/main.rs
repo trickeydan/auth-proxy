@@ -33,7 +33,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     log::info!("Loaded {} backends", config.backends.len());
     for (name, backend) in &config.backends {
         log::info!("\t /{} -> {}", name, backend.url);
-        log::info!("\t\tScope: {}", backend.scope);
+        log::info!("\t\tAuthentication: {:?}", backend.frontend_auth);
+        log::info!("\t\tAuthorization Scope: {}", backend.scope);
     }
 
     let config2 = config.clone();
